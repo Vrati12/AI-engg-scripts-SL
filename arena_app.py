@@ -1,13 +1,18 @@
-# pip install openai gradio python-dotenv
 import os
 import gradio as gr
 from openai import OpenAI
 from dotenv import load_dotenv
+
 load_dotenv()
 
-openai_client = OpenAI()                                  # uses OPENAI_API_KEY
-groq_client   = OpenAI(api_key=os.getenv("GROQ_API_KEY"),
-                            base_url="https://api.groq.com/openai/v1")
+model_a_client = OpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1"
+)
+model_b_client = OpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1"
+)
 
 def ask(client, model, prompt):
     r = client.chat.completions.create(
@@ -15,12 +20,12 @@ def ask(client, model, prompt):
     return r.choices[0].message.content
 
 def battle(prompt):
-    a = ask(openai_client, "gpt-4o-mini", prompt)
-    b = ask(groq_client, "llama-3.3-70b-versatile", prompt)
+    a = ask(model_a_client, "openai/gpt-oss-120b", prompt)
+    b = ask(model_b_client, "qwen/qwen3.8-27b", prompt)
     return a, b
 
 def vote(label):
-    return f"🗳️ Thanks! You voted: **{label}**"   # in real apps, save this to a file/DB
+    return f"🗳️ Thanks! You voted: **{label}**"
 
 with gr.Blocks(title="LLM Arena") as demo:
     gr.Markdown("# 🥊 LLM Arena — one prompt, two models")
@@ -47,4 +52,4 @@ with gr.Blocks(title="LLM Arena") as demo:
     up_b.click(lambda: vote("👍 Model B"), outputs=verdict)
     down_b.click(lambda: vote("👎 Model B"), outputs=verdict)
 
-demo.launch(share=True)   # → local + public link 🎉
+demo.launch(share=True)

@@ -1,22 +1,37 @@
-# pip install requests beautifulsoup4
 import requests
 from bs4 import BeautifulSoup
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/120.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                  "Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "DNT": "1",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Cache-Control": "max-age=0",
 }
 
 def fetch_website_contents(url):
-    # add scheme if the user forgot it
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
 
+    session = requests.Session()
+    headers = HEADERS.copy()
+
+    if "medium.com" in url:
+        headers["Referer"] = "https://www.google.com/"
+        headers["Origin"] = "https://medium.com"
+
+    session.headers.update(headers)
+
     try:
-        response = requests.get(url, headers=HEADERS, timeout=15)
+        response = session.get(url, timeout=15, allow_redirects=True)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         return f"Could not fetch the website. Error: {e}"

@@ -1,35 +1,16 @@
-# ============================================================
-#  CLASS 1  —  From Your First API Call to a Live AI App
-# ============================================================
-#
-#  What we'll build today, step by step:
-#
-#   Step 1 — Say hello to the OpenAI API
-#   Step 2 — Swap in a free model using Groq
-#   Step 3 — Scrape a website programmatically
-#   Step 4 — Summarize it with GPT
-#   Step 5 — Wrap everything in a shareable Gradio UI
-#
-#  Install everything you need:
-#  pip install python-dotenv openai requests beautifulsoup4 gradio
-# ============================================================
-
-
-# ── STEP 1: Your first API call ─────────────────────────────
-#
-#  The openai library talks to GPT over the internet.
-#  We never hardcode API keys in source files — instead we
-#  store them in a .env file and load them at runtime.
-
+import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()           # reads OPENAI_API_KEY from .env
+load_dotenv()
 
-client = OpenAI()       # the key is picked up automatically
+client = OpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
+)
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="openai/gpt-oss-120b",
     messages=[
         {"role": "system", "content": "You are a witty travel guide."},
         {"role": "user",   "content": "Suggest one thing to do in Bangalore."},
@@ -38,11 +19,6 @@ response = client.chat.completions.create(
 print("── GPT says:", response.choices[0].message.content)
 
 
-# ── STEP 2: Same code, different brain (Groq + Llama) ───────
-#
-#  Groq exposes an OpenAI-compatible API, so we reuse the
-#  exact same client — just point it at a different base_url
-#  and swap in a free open-source model.  Zero new concepts.
 
 import os
 
@@ -52,7 +28,7 @@ groq_client = OpenAI(
 )
 
 response = groq_client.chat.completions.create(
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-120b",
     messages=[
         {"role": "system", "content": "You are a witty travel guide."},
         {"role": "user",   "content": "Suggest one thing to do in Bangalore."},
@@ -61,11 +37,6 @@ response = groq_client.chat.completions.create(
 print("── Llama says:", response.choices[0].message.content)
 
 
-# ── STEP 3: Give the model eyes — scrape a website ──────────
-#
-#  LLMs only know what's in their training data.  To summarize
-#  a *live* page we fetch it ourselves, strip out noise
-#  (scripts, navbars, footers), and hand the clean text to GPT.
 
 import requests
 from bs4 import BeautifulSoup
@@ -98,11 +69,6 @@ def fetch_website_contents(url):
     return f"Title: {title}\n\nPage contents:\n{text}"
 
 
-# ── STEP 4: Summarize the scraped content with GPT ──────────
-#
-#  Now we chain the two pieces together: fetch() → summarize().
-#  The system prompt keeps the model focused on content,
-#  and we ask for markdown so the output renders nicely later.
 
 SYSTEM_PROMPT = """You analyze the contents of a website and
 give a short, friendly summary. Ignore navigation menus.
@@ -119,12 +85,6 @@ def summarize(url):
     )
     return response.choices[0].message.content
 
-
-# ── STEP 5: Ship it — wrap everything in a Gradio UI ────────
-#
-#  Gradio turns a Python function into a web app in ~5 lines.
-#  share=True gives you a public link you can send to anyone
-#  without deploying anything — perfect for demos.
 
 import gradio as gr
 
